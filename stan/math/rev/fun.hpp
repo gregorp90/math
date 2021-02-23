@@ -51,6 +51,7 @@
 #include <stan/math/rev/fun/eigenvectors_sym.hpp>
 #include <stan/math/rev/fun/elt_divide.hpp>
 #include <stan/math/rev/fun/elt_multiply.hpp>
+#include <stan/math/rev/fun/elt_multiply_temp.hpp>
 #include <stan/math/rev/fun/erf.hpp>
 #include <stan/math/rev/fun/erfc.hpp>
 #include <stan/math/rev/fun/exp.hpp>

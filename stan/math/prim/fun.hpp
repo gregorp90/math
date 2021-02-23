@@ -86,6 +86,7 @@
 #include <stan/math/prim/fun/eigenvectors_sym.hpp>
 #include <stan/math/prim/fun/elt_divide.hpp>
 #include <stan/math/prim/fun/elt_multiply.hpp>
+#include <stan/math/prim/fun/elt_multiply_temp.hpp>
 #include <stan/math/prim/fun/erf.hpp>
 #include <stan/math/prim/fun/erfc.hpp>
 #include <stan/math/prim/fun/eval.hpp>
