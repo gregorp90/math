@@ -1,5 +1,5 @@
-#ifndef STAN_MATH_REV_FUN_ELT_MULTIPLY_TEMP_HPP
-#define STAN_MATH_REV_FUN_ELT_MULTIPLY_TEMP_HPP
+#ifndef STAN_MATH_REV_FUN_DIAG_PRE_MULTIPLY_HPP
+#define STAN_MATH_REV_FUN_DIAG_POST_MULTIPLY_HPP
 
 #include <stan/math/prim/fun/Eigen.hpp>
 #include <stan/math/prim/meta.hpp>
@@ -7,7 +7,6 @@
 #include <stan/math/prim/fun/eval.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/fun/multiply.hpp>
-#include <iostream>
 
 namespace stan {
 namespace math {
@@ -26,22 +25,17 @@ namespace math {
 template <typename Mat1, typename Mat2,
           require_all_matrix_t<Mat1, Mat2>* = nullptr,
           require_any_rev_matrix_t<Mat1, Mat2>* = nullptr>
-auto elt_multiply_temp(const Mat1& m1, const Mat2& m2) {
-  check_matching_dims("elt_multiply_temp", "m1", m1, "m2", m2);
-	// return m1.cwiseProduct(m2);
-  using inner_ret_type = decltype(value_of(m1).cwiseProduct(value_of(m2))); /* 
-	Kaj naredi to? Definira tip samo? Pomoje ja. Potem lahko uporabljamo 
-	inner_ret_type namesto int na primer. Ja, zgleda da je to res, glede
-	na teste v useful-concepts. */
-	std::cout << "inner_ret_type" << std::endl;
-	std::cout << is_constant<Mat1>::value << std::endl;
-	return m1.cwiseProduct(m2);
-  /* using ret_type = return_var_matrix_t<inner_ret_type, Mat1, Mat2>; // Tukaj nastavimo dejanski return type, torej matriko.
-  if (!is_constant<Mat1>::value && !is_constant<Mat2>::value) { // Preverimo, ce sta oba tipa var.
-    arena_t<promote_scalar_t<var, Mat1>> arena_m1 = m1; // To se moram pogruntat kaj dela arena.
+auto diag_pre_multiply(const Mat1& m1, const Mat2& m2) {
+  // check_matching_dims("elt_multiply", "m1", m1, "m2", m2);
+	  check_size_match("diag_pre_multiply", "m1.size()", m1.size(), "m2.rows()",
+                   m2.rows());
+  using inner_ret_type = decltype(value_of(m1).asDiagonal() * value_of(m2));
+  using ret_type = return_var_matrix_t<inner_ret_type, Mat1, Mat2>;
+  if (!is_constant<Mat1>::value && !is_constant<Mat2>::value) {
+    /* arena_t<promote_scalar_t<var, Mat1>> arena_m1 = m1;
     arena_t<promote_scalar_t<var, Mat2>> arena_m2 = m2;
     arena_t<ret_type> ret(arena_m1.val().cwiseProduct(arena_m2.val()));
-    reverse_pass_callback([ret, arena_m1, arena_m2]() mutable { // Tukaj pa dodamo odvod nekako, to se tudi moram pogruntat. Verjetno najprej boljse spodaj (samo 1 var).
+    reverse_pass_callback([ret, arena_m1, arena_m2]() mutable {
       for (Eigen::Index j = 0; j < arena_m2.cols(); ++j) {
         for (Eigen::Index i = 0; i < arena_m2.rows(); ++i) {
           const auto ret_adj = ret.adj().coeffRef(i, j);
@@ -50,16 +44,22 @@ auto elt_multiply_temp(const Mat1& m1, const Mat2& m2) {
         }
       }
     });
-    return ret_type(ret);
+    return ret_type(ret); */
   } else if (!is_constant<Mat1>::value) {
     arena_t<promote_scalar_t<var, Mat1>> arena_m1 = m1;
     arena_t<promote_scalar_t<double, Mat2>> arena_m2 = value_of(m2);
-    arena_t<ret_type> ret(arena_m1.val().cwiseProduct(arena_m2));
+    arena_t<ret_type> ret(arena_m1.val().as.Diagonal() * arena_m2);
     reverse_pass_callback([ret, arena_m1, arena_m2]() mutable {
-      arena_m1.adj().array() += arena_m2.array() * ret.adj().array();
+			for (int i = 0; i < m1.size(); ++i) {
+				for (int j = 0; j < m1.size(); ++j) {
+					arena.m1.adj().coeffRef(i) += arena_m2.val().coeff(i,j);
+				}
+			}
+			// arena.m1.adj().coeffRef(i) += 
+      // arena_m1.adj().array() += arena_m2.array() * ret.adj().array(); // CHANGE HERE!
     });
     return ret_type(ret);
-  } else if (!is_constant<Mat2>::value) {
+  } /* else if (!is_constant<Mat2>::value) {
     arena_t<promote_scalar_t<double, Mat1>> arena_m1 = value_of(m1);
     arena_t<promote_scalar_t<var, Mat2>> arena_m2 = m2;
     arena_t<ret_type> ret(arena_m1.cwiseProduct(arena_m2.val()));
