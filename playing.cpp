@@ -18,9 +18,12 @@ int main() {
 	
 	Eigen::Matrix<stan::math::var, 2, 2> M5;
 	Eigen::Matrix<stan::math::var, 2, 2> M6;
+	Eigen::Matrix<stan::math::var, 2, 2> M7;
+
 	M5 << 1, 4, 2, 1;
 	// M6 = stan::math::elt_multiply_(M1, 4);
 	M6 = stan::math::elt_multiply_temp(M1, M5);
+	M7 = stan::math::elt_multiply(M1, M5);
 	std::cout << M6 << std::endl << std::endl;
 	
 	// stan::math::var lp;
